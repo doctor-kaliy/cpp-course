@@ -1,6 +1,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <cstring>
+#include <cstdio>
 
 int main(int argc, char* argv[])
 {
@@ -17,18 +18,14 @@ int main(int argc, char* argv[])
         return EXIT_FAILURE;
     }
 
-    const size_t BUFFER_SIZE = 8192;
-    char substr[BUFFER_SIZE];
+    char substr[8192];
     size_t str_size = strlen(argv[1]);
     size_t p = 0;
     bool found = false;
-
     for (;;)
     {
-        char buffer[BUFFER_SIZE];
-        size_t bytes_read = fread(buffer, sizeof(char), BUFFER_SIZE, file);
-
-        if (bytes_read == 0)
+        int c = getc(file);
+        if (found || c == EOF)
         {
             if (ferror(file))
             {
@@ -38,29 +35,19 @@ int main(int argc, char* argv[])
             }
             break;
         }
-
-        for (size_t i = 0; !found && i != bytes_read; ++i)
+        substr[p++] = (char) c;
+        if (p == str_size)
         {
-            substr[p++] = buffer[i];
-            if (p == str_size)
+            found |= (strncmp(substr, argv[1], str_size) == 0);
+            p--;
+            for (size_t j = 0; j + 1 < str_size; ++j)
             {
-                found |= (strncmp(substr, argv[1], str_size) == 0);
-                p--;
-                for (size_t j = 0; j + 1 < str_size; ++j)
-                {
-                    substr[j] = substr[j + 1];
-                }
+                substr[j] = substr[j + 1];
             }
-        }
-
-        if (found)
-        {
-            break;
         }
     }
 
     fclose(file);
-    std::cout << (found ? "true\n" : "false\n");
+    fwrite((found ? "true\n" : "false\n"), sizeof(char), 6 - (size_t) found, stdout);
     return EXIT_SUCCESS;
 }
-
