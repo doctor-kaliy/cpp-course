@@ -12,6 +12,7 @@ _start:
                 lea             rsi, [rsp + 2 * 128 * 8]
                 lea	r8, [rsp + 1 * 128 * 8]
                 mov 	rdi, rsp
+                
                 call	set_zero
                 call            mul_long_long
 	
@@ -30,17 +31,15 @@ mul_long_long:
 	push	r8
 	push	rdi
 	push	rcx
-	
-	xor	r9, r9
 .loop1:
-	mov	rbx, qword[r8 + r9 * 8]
-	mov	qword[r8 + r9 * 8], 0 
+	mov	rbx, [r8]
+	mov	qword[r8], 0 
 	call	add_mul_long_short
 	
 	lea	rdi, [rdi + 8]
 	
-	inc 	r9
-	cmp	r9, rcx
+	lea	r8, [r8 + 8]
+	cmp	r8, rsi
 	jne	.loop1
 	
 	pop	rcx
@@ -53,17 +52,28 @@ add_mul_long_short:
 	push	rdi
 	push	rcx
 	push	rsi
+	xor	r9, r9
+	xor	rdx, rdx
+	clc
 .loop2:
+	add	[rdi], r9
+	xor	r9, r9
+	adc	r9, 0
+	add 	[rdi], rdx
+	adc	r9, 0
+	
 	mov	rax, [rsi]
 	mul 	rbx
-	call	add_long_short
-	mov	rax, rdx
+	add 	[rdi], rax
+	adc 	r9, 0
+	
 	lea	rdi, [rdi + 8]
-	call	add_long_short
 	lea	rsi, [rsi + 8]
 	dec	rcx
 	jnz	.loop2
 	
+	add 	[rdi], r9
+	add 	[rdi], rdx
 	pop	rsi
 	pop	rcx
 	pop	rdi
