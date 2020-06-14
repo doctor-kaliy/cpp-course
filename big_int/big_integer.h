@@ -5,11 +5,13 @@
 #include <iosfwd>
 #include <cstdint>
 #include <vector>
+#include <functional>
 
 struct big_integer {
     big_integer();
     big_integer(big_integer const& other);
     big_integer(int a);
+    big_integer(uint32_t a);
     explicit big_integer(std::string const& str);
     big_integer(int32_t sign, std::vector<uint32_t> const& words);
     explicit big_integer(std::vector<uint32_t> const& other);
@@ -20,7 +22,7 @@ struct big_integer {
     big_integer& operator+=(big_integer const& rhs);
     big_integer& operator-=(big_integer const& rhs);
     big_integer& operator*=(big_integer const& rhs);
-    big_integer& operator/=(big_integer const& rhs);
+    big_integer& operator/=(big_integer const& other);
     big_integer& operator%=(big_integer const& rhs);
 
     big_integer& operator&=(big_integer const& rhs);
@@ -49,22 +51,23 @@ struct big_integer {
 
     friend std::string to_string(big_integer const& a);
 
-    std::vector<uint32_t> words;
+    std::vector<uint32_t> data;
 private:
-
     int32_t sign;
 
     big_integer& add_signed(int32_t rhs_sign, std::vector<uint32_t> const& rhs_words);
 
     uint32_t get_signed(size_t id, size_t not_zero_pos) const;
 
-    bool smaller(const big_integer &a, const big_integer &b, size_t index);
+    static bool smaller(const big_integer &a, const big_integer &b, size_t index);
 
     size_t size() const;
 
-    void difference(big_integer &a, const big_integer &b, size_t index);
+    static void difference(big_integer &a, const big_integer &b, size_t index);
 
-    big_integer shortdiv(const big_integer &lhs, uint32_t rhs);
+    static big_integer shortdiv(const big_integer &lhs, uint32_t rhs);
+
+    big_integer &bit_operation(const big_integer &rhs, const std::function<uint32_t(uint32_t, uint32_t)>& op);
 };
 
 big_integer operator+(big_integer a, big_integer const& b);
